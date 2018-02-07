@@ -5,6 +5,40 @@
 #include <QtOpenGL>
 #include <QTimer>
 
+struct Dot
+{
+    GLfloat x;
+    GLfloat y;
+};
+
+struct Line
+{
+    size_t dotIndex1;
+    size_t dotIndex2;
+};
+
+class AbstructObject
+{
+private:
+    std::vector<Dot> dots;
+    std::vector<Line> lines;
+    std::vector<int> count;
+    std::vector<float> velocity;
+
+public:
+    AbstructObject();
+
+    std::vector<Dot> &getDots();
+    Dot &getDot(size_t index);
+    std::vector<Line> &getLines();
+    Line &getLine(size_t index);
+
+    void modifyObject();
+    void resizeObject(int widht, int height);
+
+};
+
+
 class MainWindow : public QGLWidget
 {
     Q_OBJECT
@@ -13,7 +47,10 @@ private:
     int screenWidht;
     int screenHeight;
 
+    AbstructObject *abstructObject;
+
     void drawBackground();
+    void drawAbstructObject();
 
 protected:
     void initializeGL();
