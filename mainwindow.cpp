@@ -10,6 +10,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     setFormat(QGLFormat(QGL::DoubleBuffer));
     glDepthFunc(GL_LEQUAL);
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(timerDrawScene()));
+    timer->start(10);
 }
 
 MainWindow::~MainWindow()
@@ -77,6 +81,19 @@ void MainWindow::drawAbstructObject()
         glVertex2f(dot2.x, dot2.y);
         glEnd();
     }
+}
+
+void MainWindow::timerDrawScene()
+{
+    std::vector<Dot> &dots = abstructObject->getDots();
+
+    for (size_t i = 0; i < dots.size(); i++)
+    {
+        dots[i].x++;
+        dots[i].y++;
+    }
+
+    updateGL();
 }
 
 AbstructObject::AbstructObject()

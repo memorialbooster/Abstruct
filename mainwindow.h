@@ -9,6 +9,9 @@ struct Dot
 {
     GLfloat x;
     GLfloat y;
+    float vx;
+    float vy;
+    int iter;
 };
 
 struct Line
@@ -60,6 +63,9 @@ protected:
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+protected slots:
+    void timerDrawScene();
 };
 
 #endif // MAINWINDOW_H
