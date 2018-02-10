@@ -9,8 +9,8 @@ struct Dot
 {
     GLfloat x;
     GLfloat y;
-    float vx;
-    float vy;
+    GLfloat vx;
+    GLfloat vy;
     int iter;
 };
 
