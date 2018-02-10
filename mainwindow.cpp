@@ -43,10 +43,10 @@ void MainWindow::resizeGL(int width, int height)
 
 void MainWindow::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // чистим буфер изображения и буфер глубины
-    glMatrixMode(GL_PROJECTION); // устанавливаем матрицу
-    glLoadIdentity(); // загружаем матрицу
-    glOrtho(0, 600, 0, 600, -1, 2); // подготавливаем плоскости для матрицы
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, 600, 0, 600, -1, 2);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -96,55 +96,29 @@ void MainWindow::timerDrawScene()
 
 AbstructObject::AbstructObject()
 {
-    dots.reserve(4);
-    Dot dot;
-    dot.x = GLfloat(20);
-    dot.y = GLfloat(30);
-    dot.vx = GLfloat(1);
-    dot.vy = GLfloat(1);
-    dot.iter = 30;
-    dots.push_back(dot);
-    dot.x = GLfloat(520);
-    dot.y = GLfloat(50);
-    dot.vx = GLfloat(-2);
-    dot.vy = GLfloat(1);
-    dot.iter = 20;
-    dots.push_back(dot);
-    dot.x = GLfloat(430);
-    dot.y = GLfloat(300);
-    dot.vx = GLfloat(-1);
-    dot.vy = GLfloat(-2);
-    dot.iter = 10;
-    dots.push_back(dot);
-    dot.x = GLfloat(40);
-    dot.y = GLfloat(350);
-    dot.vx = GLfloat(3);
-    dot.vy = GLfloat(-1.5);
-    dot.iter = 30;
-    dots.push_back(dot);
-    dot.x = GLfloat(300);
-    dot.y = GLfloat(200);
-    dot.vx = GLfloat(-2);
-    dot.vy = GLfloat(-1);
-    dot.iter = 15;
-    dots.push_back(dot);
-    lines.reserve(4);
+    backCounter = 0;
+
+    dots.reserve(7);
+    lines.reserve(7);
+    addDotIndexes.reserve(3);
+
+    for (int i = 0; i < 7; i++)
+    {
+        createRandomDot();
+    }
+
     Line line;
-    line.dotIndex1 = 0;
-    line.dotIndex2 = 1;
-    lines.push_back(line);
-    line.dotIndex1 = 1;
-    line.dotIndex2 = 2;
-    lines.push_back(line);
-    line.dotIndex1 = 2;
-    line.dotIndex2 = 3;
-    lines.push_back(line);
-    line.dotIndex1 = 3;
-    line.dotIndex2 = 4;
-    lines.push_back(line);
-    line.dotIndex1 = 4;
+    for (int i = 0; i < 6; i++)
+    {
+        line.dotIndex1 = i;
+        line.dotIndex2 = i + 1;
+        lines.push_back(line);
+    }
+    line.dotIndex1 = 6;
     line.dotIndex2 = 0;
     lines.push_back(line);
+
+    randomiseLoop();
 }
 
 std::vector<Dot> &AbstructObject::getDots()
@@ -173,24 +147,108 @@ void AbstructObject::modifyObject()
     {
         if (dots[i].iter == 0)
         {
-            int randCoord = rand() % 599 + 1;
-            dots[i].iter = rand() % 200 + 100;
-            dots[i].vx = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dots[i].x) /
-                    static_cast <GLfloat>(dots[i].iter);
-
-            randCoord = rand() % 599 + 1;
-            dots[i].vy = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dots[i].y) /
-                    static_cast <GLfloat>(dots[i].iter);
+            randomizeDot(&dots[i]);
         }
 
         dots[i].x += dots[i].vx;
         dots[i].y += dots[i].vy;
         dots[i].iter--;
     }
+
+    randomiseLoop();
 }
 
 void AbstructObject::resizeObject(int widht, int height)
 {
     (void) widht;
     (void) height;
+}
+
+void AbstructObject::randomizeDot(Dot *dot)
+{
+    int randCoord = rand() % 599 + 1;
+    dot->iter = rand() % 200 + 100;
+    dot->vx = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dot->x) /
+            static_cast <GLfloat>(dot->iter);
+
+    randCoord = rand() % 599 + 1;
+    dot->vy = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dot->y) /
+            static_cast <GLfloat>(dot->iter);
+}
+
+void  AbstructObject::randomiseLoop()
+{
+    if(backCounter == 0)
+    {
+        int randNum = rand() % 4;
+
+        switch (randNum)
+        {
+        case 1:
+            if (addDotIndexes.size() < 3 && addDotIndexes.size() >= 0)
+            {
+                createRandomDot();
+
+                size_t newDotIndex = dots.size() - 1;
+                addDotIndexes.push_back(newDotIndex);
+
+                Line newLine;
+                newLine.dotIndex1 = newDotIndex;
+                newLine.dotIndex2 = rand() % 7;
+
+                lines.push_back(newLine);
+
+                int secondIndex = rand() % 6;
+                if (secondIndex >= newLine.dotIndex2)
+                {
+                    secondIndex++;
+                }
+                newLine.dotIndex2 =secondIndex;
+
+                lines.push_back(newLine);
+            }
+            break;
+        case 2:
+            if (addDotIndexes.size() <= 3 && addDotIndexes.size() > 0)
+            {
+                size_t deletedDotIndex = addDotIndexes[addDotIndexes.size() - 1];
+
+                addDotIndexes.erase(addDotIndexes.end() - 1);
+
+                for (int i = 0; i < 2; i++)
+                {
+                    std::vector<Line>::iterator lineToDel = lines.end() - 1;
+
+                    for (size_t j = (deletedDotIndex + 1) * 2 - i; j > 0; j--)
+                    {
+                        if (lineToDel->dotIndex1 == deletedDotIndex ||
+                                lineToDel->dotIndex2 == deletedDotIndex)
+                        {
+                            lines.erase(lineToDel);
+                            break;
+                        }
+
+                        lineToDel--;
+                    }
+                }
+            }
+            break;
+        }
+
+        backCounter = 50;
+    }
+
+    backCounter--;
+}
+
+void AbstructObject::createRandomDot()
+{
+    Dot dot;
+
+    dot.x =rand() % 599 + 1;
+    dot.y = rand() % 599 + 1;
+
+    randomizeDot(&dot);
+
+    dots.push_back(dot);
 }

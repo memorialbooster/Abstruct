@@ -25,8 +25,13 @@ class AbstructObject
 private:
     std::vector<Dot> dots;
     std::vector<Line> lines;
-    std::vector<int> count;
-    std::vector<float> velocity;
+    std::vector<size_t> addDotIndexes;
+
+    int backCounter;
+
+    void createRandomDot();
+    void randomizeDot(Dot *dot);
+    void randomiseLoop();
 
 public:
     AbstructObject();
