@@ -20,18 +20,28 @@ struct Line
     size_t dotIndex2;
 };
 
+struct Coord
+{
+    size_t dotIndex;
+    std::string coordString;
+};
+
 class AbstructObject
 {
 private:
     std::vector<Dot> dots;
     std::vector<Line> lines;
     std::vector<size_t> addDotIndexes;
+    std::vector<Coord> coordinates;
 
     int backCounter;
 
     void createRandomDot();
+    void createCoord();
+    void removeCoord(size_t dotIndex);
     void randomizeDot(Dot *dot);
     void randomiseLoop();
+    void randomiseCoord();
 
 public:
     AbstructObject();
@@ -40,6 +50,7 @@ public:
     Dot &getDot(size_t index);
     std::vector<Line> &getLines();
     Line &getLine(size_t index);
+    std::vector<Coord> &getCoordinates();
 
     void modifyObject();
     void resizeObject(int widht, int height);

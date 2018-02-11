@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QGLWidget(parent)
@@ -85,6 +87,28 @@ void MainWindow::drawAbstructObject()
         glVertex2f(dot2.x, dot2.y);
         glEnd();
     }
+
+    std::vector<Coord> coords = abstructObject->getCoordinates();
+
+    for (size_t i = 0; i < coords.size(); i++)
+    {
+        Dot &dot = abstructObject->getDot(coords[i].dotIndex);
+
+        glLineWidth(GLfloat(1));
+        glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
+        glBegin(GL_LINES);
+        glVertex2f(dot.x, dot.y);
+        glVertex2f(dot.x + 15, dot.y + 15);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex2f(dot.x + 30, dot.y + 15);
+        glVertex2f(dot.x + 15, dot.y + 15);
+        glEnd();
+
+        renderText(dot.x + 15, dot.y + 20, 0,
+                   QString::fromUtf8(coords[i].coordString.c_str()), QFont());
+    }
 }
 
 void MainWindow::timerDrawScene()
@@ -101,6 +125,7 @@ AbstructObject::AbstructObject()
     dots.reserve(7);
     lines.reserve(7);
     addDotIndexes.reserve(3);
+    coordinates.reserve(3);
 
     for (int i = 0; i < 7; i++)
     {
@@ -119,6 +144,7 @@ AbstructObject::AbstructObject()
     lines.push_back(line);
 
     randomiseLoop();
+    createCoord();
 }
 
 std::vector<Dot> &AbstructObject::getDots()
@@ -141,6 +167,11 @@ Line &AbstructObject::getLine(size_t index)
     return lines[index];
 }
 
+std::vector<Coord> &AbstructObject::getCoordinates()
+{
+    return coordinates;
+}
+
 void AbstructObject::modifyObject()
 {
     for (size_t i = 0; i < dots.size(); i ++)
@@ -156,6 +187,20 @@ void AbstructObject::modifyObject()
     }
 
     randomiseLoop();
+    randomiseCoord();
+
+    for (size_t i = 0; i < coordinates.size(); i ++)
+    {
+        std::stringstream coodrdString;
+        coodrdString << "[";
+        int intCoord = dots[coordinates[i].dotIndex].x / 1;
+        coodrdString << intCoord;
+        coodrdString << ":";
+        intCoord = dots[coordinates[i].dotIndex].y / 1;
+        coodrdString << intCoord;
+        coodrdString << "]";
+        coordinates[i].coordString = coodrdString.str();
+    }
 }
 
 void AbstructObject::resizeObject(int widht, int height)
@@ -214,6 +259,7 @@ void  AbstructObject::randomiseLoop()
                 size_t deletedDotIndex = addDotIndexes[addDotIndexes.size() - 1];
 
                 addDotIndexes.erase(addDotIndexes.end() - 1);
+                dots.erase(dots.begin() + deletedDotIndex);
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -231,6 +277,8 @@ void  AbstructObject::randomiseLoop()
                         lineToDel--;
                     }
                 }
+
+                removeCoord(deletedDotIndex);
             }
             break;
         }
@@ -251,4 +299,85 @@ void AbstructObject::createRandomDot()
     randomizeDot(&dot);
 
     dots.push_back(dot);
+}
+
+void AbstructObject::randomiseCoord()
+{
+    if(backCounter == 25)
+    {
+        int randNum = rand() % 4;
+
+        switch (randNum)
+        {
+        case 1:
+            if (coordinates.size() < dots.size())
+            {
+                createCoord();
+            }
+        case 2:
+            if (coordinates.size() < dots.size() && coordinates.size() > 2)
+            {
+                randNum = rand() % dots.size();
+
+                removeCoord(randNum);
+            }
+        }
+    }
+}
+
+void  AbstructObject::createCoord()
+{
+    Coord coord;
+
+    std::vector<size_t> freeIndexses;
+
+    for(size_t i = 0; i < dots.size(); i++)
+    {
+        size_t j = 0;
+        for (; j < coordinates.size(); j++)
+        {
+            if (coordinates[j].dotIndex == i)
+            {
+                break;
+            }
+        }
+
+        if(j == coordinates.size())
+        {
+            freeIndexses.push_back(i);
+        }
+    }
+
+
+    size_t index = freeIndexses[rand() % freeIndexses.size()];
+    coord.dotIndex =  index;
+
+    std::stringstream coodrdString;
+    coodrdString << "[";
+    int intCoord = dots[index].x / 1;
+    coodrdString << intCoord;
+    coodrdString << ":";
+    intCoord = dots[index].y / 1;
+    coodrdString << intCoord;
+    coodrdString << "]";
+
+    coord.coordString = coodrdString.str();
+    coordinates.push_back(coord);
+}
+
+void AbstructObject::removeCoord(size_t dotIndex)
+{
+    std::vector<Coord>::iterator coord = coordinates.begin();
+
+    for (size_t i = 0; i < coordinates.size(); i++)
+    {
+        if (coord->dotIndex == dotIndex)
+        {
+            coordinates.erase(coord);
+
+            break;
+        }
+
+        coord++;
+    }
 }
