@@ -21,6 +21,7 @@
 #define CTEST_Y_SCALE GLfloat(20)
 #define BORDER_X 60
 #define BORDER_Y 20
+#define OBJECT_Y GLfloat(1)
 
 MainWindow::MainWindow(QWidget *parent)
     : QGLWidget(parent)
@@ -80,12 +81,12 @@ void MainWindow::drawBackground()
 {
     glBegin(GL_QUADS);
     glColor3f(GLfloat(1.0), GLfloat(1.0), GLfloat(1.0));
-    glVertex3f(GLfloat(0), GLfloat(300), GLfloat(0));
+    glVertex3f(GLfloat(0), GLfloat(DEFAULT_SCREEN_HEIGHT / 2), GLfloat(0));
     glColor3f(GLfloat(0.7), GLfloat(0.7), GLfloat(0.7));
     glVertex3f(GLfloat(0), GLfloat(0), GLfloat(0));
-    glVertex3f(GLfloat(680), GLfloat(0), GLfloat(0));
+    glVertex3f(GLfloat(DEFAULT_SCREEN_WIDHT), GLfloat(0), GLfloat(0));
     glColor3f(GLfloat(1.0), GLfloat(1.0), GLfloat(1.0));
-    glVertex3f(GLfloat(680), GLfloat(300), GLfloat(0));
+    glVertex3f(GLfloat(DEFAULT_SCREEN_WIDHT), GLfloat(DEFAULT_SCREEN_HEIGHT / 2), GLfloat(0));
     glEnd();
 }
 
@@ -93,16 +94,17 @@ void MainWindow::drawAbstructObject()
 {
     std::vector<Line> &objectLines = abstructObject->getLines();
 
+    glLineWidth(GLfloat(1));
+    glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
+
     for (size_t i = 0; i < objectLines.size(); i++)
     {
         Dot &dot1 = abstructObject->getDot(objectLines[i].dotIndex1);
         Dot &dot2 = abstructObject->getDot(objectLines[i].dotIndex2);
 
-        glLineWidth(GLfloat(1));
-        glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
         glBegin(GL_LINES);
-        glVertex2f(dot1.x, dot1.y);
-        glVertex2f(dot2.x, dot2.y);
+        glVertex3f(dot1.x, dot1.y, OBJECT_Y);
+        glVertex3f(dot2.x, dot2.y, OBJECT_Y);
         glEnd();
     }
 
@@ -112,19 +114,17 @@ void MainWindow::drawAbstructObject()
     {
         Dot &dot = abstructObject->getDot(coords[i].dotIndex);
 
-        glLineWidth(GLfloat(1));
-        glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
         glBegin(GL_LINES);
-        glVertex2f(dot.x, dot.y);
-        glVertex2f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT);
+        glVertex3f(dot.x, dot.y, OBJECT_Y);
+        glVertex3f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT, OBJECT_Y);
         glEnd();
 
         glBegin(GL_LINES);
-        glVertex2f(dot.x + COORD_LINE_LENGHT, dot.y + COORD_DIAG_LENGHT);
-        glVertex2f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT);
+        glVertex3f(dot.x + COORD_LINE_LENGHT, dot.y + COORD_DIAG_LENGHT, OBJECT_Y);
+        glVertex3f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT, OBJECT_Y);
         glEnd();
 
-        renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, 0,
+        renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, OBJECT_Y,
                    QString::fromUtf8(coords[i].coordString.c_str()), QFont());
     }
 }
