@@ -42,6 +42,7 @@ struct Config
     int addDotProbability;
     int coordProbability;
     int stapsToCheck;
+    int smoothLine;
 };
 
 class AbstructObject
@@ -73,6 +74,7 @@ public:
     std::vector<Line> &getLines();
     Line &getLine(size_t index);
     std::vector<Coord> &getCoordinates();
+    int getSmoothSetting();
 
     void modifyObject();
     void resizeObject(int widht, int height);

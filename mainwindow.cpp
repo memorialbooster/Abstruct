@@ -15,6 +15,7 @@
 #define DEFAULT_DOT_PROBABILITY 4
 #define DEFAULT_COORD_PROBABILITY 4
 #define DEFAULT_STEPS 50
+#define DEFAULT_SMOOTH_LINE 1
 
 #define COORD_DIAG_LENGHT GLfloat(15)
 #define COORD_LINE_LENGHT GLfloat(37)
@@ -96,6 +97,14 @@ void MainWindow::drawAbstructObject()
 
     glLineWidth(GLfloat(1));
     glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
+
+    if(abstructObject->getSmoothSetting())
+    {
+        glEnable(GL_LINE_SMOOTH);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    }
 
     for (size_t i = 0; i < objectLines.size(); i++)
     {
@@ -190,6 +199,11 @@ Line &AbstructObject::getLine(size_t index)
 std::vector<Coord> &AbstructObject::getCoordinates()
 {
     return coordinates;
+}
+
+int AbstructObject::getSmoothSetting()
+{
+    return config.smoothLine;
 }
 
 void AbstructObject::modifyObject()
@@ -416,6 +430,7 @@ void AbstructObject::loadConfig()
     config.addDotProbability = DEFAULT_DOT_PROBABILITY;
     config.coordProbability = DEFAULT_COORD_PROBABILITY;
     config.stapsToCheck = DEFAULT_STEPS;
+    config.smoothLine = DEFAULT_SMOOTH_LINE;
 
     std::string fileLine;
     //std::ifstream configFile("settings.cfg");
@@ -584,6 +599,21 @@ void AbstructObject::loadConfig()
             config.stapsToCheck = num / 10;
             continue;
         }
+
+        if (key == "smoothLine")
+        {
+            if (num < 0)
+            {
+                num = 0;
+            }
+            if (num > 1)
+            {
+                num = 1;
+            }
+            config.smoothLine = num;
+            continue;
+        }
+
     }
 
     configFile.close();
