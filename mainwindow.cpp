@@ -3,12 +3,30 @@
 #include <ctime>
 #include <sstream>
 #include <iostream>
+#include <fstream>
+
+#define DEFAULT_DOTS_NUM 7
+#define DEFAULT_ADD_DOTS_MAX_NUM 3
+#define DEFAULT_ADD_DOTS_MIN_NUM 0
+#define DEFAULT_COORD_MIN_NUM 2
+#define COORD_MAX_NUM 16
+#define DEFAULT_MIN_ITERS 100
+#define DEFAULT_MAX_ITERS 300
+#define DEFAULT_DOT_PROBABILITY 4
+#define DEFAULT_COORD_PROBABILITY 4
+#define DEFAULT_STEPS 50
+
+#define COORD_DIAG_LENGHT GLfloat(15)
+#define COORD_LINE_LENGHT GLfloat(37)
+#define CTEST_Y_SCALE GLfloat(20)
+#define BORDER_X 60
+#define BORDER_Y 20
 
 MainWindow::MainWindow(QWidget *parent)
     : QGLWidget(parent)
 {
-    screenHeight = 600;
-    screenWidht = 600;
+    screenHeight = DEFAULT_SCREEN_HEIGHT;
+    screenWidht = DEFAULT_SCREEN_WIDHT;
 
     abstructObject = new AbstructObject;
 
@@ -48,7 +66,7 @@ void MainWindow::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, 600, 0, 600, -1, 2);
+    glOrtho(0, 680, 0, 600, -1, 2);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -65,9 +83,9 @@ void MainWindow::drawBackground()
     glVertex3f(GLfloat(0), GLfloat(300), GLfloat(0));
     glColor3f(GLfloat(0.7), GLfloat(0.7), GLfloat(0.7));
     glVertex3f(GLfloat(0), GLfloat(0), GLfloat(0));
-    glVertex3f(GLfloat(600), GLfloat(0), GLfloat(0));
+    glVertex3f(GLfloat(680), GLfloat(0), GLfloat(0));
     glColor3f(GLfloat(1.0), GLfloat(1.0), GLfloat(1.0));
-    glVertex3f(GLfloat(600), GLfloat(300), GLfloat(0));
+    glVertex3f(GLfloat(680), GLfloat(300), GLfloat(0));
     glEnd();
 }
 
@@ -98,15 +116,15 @@ void MainWindow::drawAbstructObject()
         glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
         glBegin(GL_LINES);
         glVertex2f(dot.x, dot.y);
-        glVertex2f(dot.x + 15, dot.y + 15);
+        glVertex2f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT);
         glEnd();
 
         glBegin(GL_LINES);
-        glVertex2f(dot.x + 30, dot.y + 15);
-        glVertex2f(dot.x + 15, dot.y + 15);
+        glVertex2f(dot.x + COORD_LINE_LENGHT, dot.y + COORD_DIAG_LENGHT);
+        glVertex2f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT);
         glEnd();
 
-        renderText(dot.x + 15, dot.y + 20, 0,
+        renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, 0,
                    QString::fromUtf8(coords[i].coordString.c_str()), QFont());
     }
 }
@@ -122,24 +140,26 @@ AbstructObject::AbstructObject()
 {
     backCounter = 0;
 
-    dots.reserve(7);
-    lines.reserve(7);
-    addDotIndexes.reserve(3);
-    coordinates.reserve(3);
+    loadConfig();
 
-    for (int i = 0; i < 7; i++)
+    dots.reserve(config.dotsNum + config.addDotsMaxNum);
+    lines.reserve(config.dotsNum + config.addDotsMaxNum * 2);
+    addDotIndexes.reserve(config.addDotsMaxNum);
+    coordinates.reserve(config.dotsNum + config.addDotsMaxNum - 1);
+
+    for (int i = 0; i < config.dotsNum; i++)
     {
         createRandomDot();
     }
 
     Line line;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < config.dotsNum - 1; i++)
     {
         line.dotIndex1 = i;
         line.dotIndex2 = i + 1;
         lines.push_back(line);
     }
-    line.dotIndex1 = 6;
+    line.dotIndex1 = config.dotsNum - 1;
     line.dotIndex2 = 0;
     lines.push_back(line);
 
@@ -211,12 +231,12 @@ void AbstructObject::resizeObject(int widht, int height)
 
 void AbstructObject::randomizeDot(Dot *dot)
 {
-    int randCoord = rand() % 599 + 1;
-    dot->iter = rand() % 200 + 100;
+    int randCoord = rand() % (config.widht - 1 - BORDER_X * 2) + 1 + BORDER_X;
+    dot->iter = rand() % (config.maxIters - config.minIters) + config.minIters;
     dot->vx = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dot->x) /
             static_cast <GLfloat>(dot->iter);
 
-    randCoord = rand() % 599 + 1;
+    randCoord = rand() % (config.height - 1 - BORDER_Y * 2) + 1 + BORDER_Y;
     dot->vy = static_cast <GLfloat>(static_cast <GLfloat>(randCoord) - dot->y) /
             static_cast <GLfloat>(dot->iter);
 }
@@ -225,12 +245,12 @@ void  AbstructObject::randomiseLoop()
 {
     if(backCounter == 0)
     {
-        int randNum = rand() % 4;
+        int randNum = rand() % config.addDotProbability;
 
         switch (randNum)
         {
         case 1:
-            if (addDotIndexes.size() < 3 && addDotIndexes.size() >= 0)
+            if (addDotIndexes.size() < config.addDotsMaxNum)
             {
                 createRandomDot();
 
@@ -239,11 +259,11 @@ void  AbstructObject::randomiseLoop()
 
                 Line newLine;
                 newLine.dotIndex1 = newDotIndex;
-                newLine.dotIndex2 = rand() % 7;
+                newLine.dotIndex2 = rand() % config.dotsNum;
 
                 lines.push_back(newLine);
 
-                int secondIndex = rand() % 6;
+                int secondIndex = rand() % (config.dotsNum - 1);
                 if (secondIndex >= newLine.dotIndex2)
                 {
                     secondIndex++;
@@ -254,7 +274,8 @@ void  AbstructObject::randomiseLoop()
             }
             break;
         case 2:
-            if (addDotIndexes.size() <= 3 && addDotIndexes.size() > 0)
+            if (addDotIndexes.size() <= config.addDotsMaxNum &&
+                    addDotIndexes.size() > config.addDotsMinNum)
             {
                 size_t deletedDotIndex = addDotIndexes[addDotIndexes.size() - 1];
 
@@ -283,7 +304,7 @@ void  AbstructObject::randomiseLoop()
             break;
         }
 
-        backCounter = 50;
+        backCounter = config.stapsToCheck;
     }
 
     backCounter--;
@@ -293,8 +314,8 @@ void AbstructObject::createRandomDot()
 {
     Dot dot;
 
-    dot.x =rand() % 599 + 1;
-    dot.y = rand() % 599 + 1;
+    dot.x = rand() % (config.widht - 1) + 1;
+    dot.y = rand() % (config.height - 1) + 1;
 
     randomizeDot(&dot);
 
@@ -303,22 +324,23 @@ void AbstructObject::createRandomDot()
 
 void AbstructObject::randomiseCoord()
 {
-    if(backCounter == 25)
+    if(backCounter == config.stapsToCheck / 2)
     {
-        int randNum = rand() % 4;
+        int randNum = rand() % config.coordProbability;
 
         switch (randNum)
         {
         case 1:
-            if (coordinates.size() < dots.size())
+            if (coordinates.size() < dots.size() && coordinates.size() < COORD_MAX_NUM)
             {
                 createCoord();
             }
         case 2:
-            if (coordinates.size() < dots.size() && coordinates.size() > 2)
+            if (coordinates.size() < dots.size() && coordinates.size() > config.coordMinNum)
             {
                 randNum = rand() % dots.size();
-
+                // Looks pretty good but incorrect.
+                // addDotds should be there instead of dots.
                 removeCoord(randNum);
             }
         }
@@ -347,7 +369,6 @@ void  AbstructObject::createCoord()
             freeIndexses.push_back(i);
         }
     }
-
 
     size_t index = freeIndexses[rand() % freeIndexses.size()];
     coord.dotIndex =  index;
@@ -380,4 +401,190 @@ void AbstructObject::removeCoord(size_t dotIndex)
 
         coord++;
     }
+}
+
+void AbstructObject::loadConfig()
+{
+    config.widht = DEFAULT_SCREEN_WIDHT;
+    config.height = DEFAULT_SCREEN_HEIGHT;
+    config.dotsNum = DEFAULT_DOTS_NUM;
+    config.addDotsMaxNum = DEFAULT_ADD_DOTS_MAX_NUM;
+    config.addDotsMinNum = DEFAULT_ADD_DOTS_MIN_NUM;
+    config.coordMinNum = DEFAULT_COORD_MIN_NUM;
+    config.minIters = DEFAULT_MIN_ITERS;
+    config.maxIters = DEFAULT_MAX_ITERS;
+    config.addDotProbability = DEFAULT_DOT_PROBABILITY;
+    config.coordProbability = DEFAULT_COORD_PROBABILITY;
+    config.stapsToCheck = DEFAULT_STEPS;
+
+    std::string fileLine;
+    //std::ifstream configFile("settings.cfg");
+    std::ifstream configFile("E:\\Projects\\Abstruct_2\\build-Abstruct_2-Desktop_Qt_5_7_1_MSVC2015_64bit-Debug\\debug\\settings.cfg");
+
+    while (getline(configFile, fileLine))
+    {
+        if (fileLine[0] == '#' || fileLine[0] == '\n')
+        {
+            continue;
+        }
+
+        std::string key;
+
+        for(size_t i = 0; fileLine[i] != ' ' && i < fileLine.size(); i++)
+        {
+            key.push_back(fileLine[i]);
+        }
+
+        if (fileLine.size() - key.size() < 2)
+        {
+            continue;
+        }
+
+        fileLine.erase(0, key.size() + 1);
+        std::stringstream buf;
+        buf << fileLine;
+        int num;
+        buf >> num;
+
+        if (key == "dotsNum")
+        {
+            if (num < 3)
+            {
+                num = 3;
+            }
+            if (num > 100)
+            {
+                num = 100;
+            }
+            config.dotsNum = num;
+            continue;
+        }
+
+        if (key == "addDotsMaxNum")
+        {
+            if (num < 2)
+            {
+                num = 2;
+            }
+            if (num > 5)
+            {
+                num = 5;
+            }
+            config.addDotsMaxNum = num;
+            continue;
+        }
+
+        if (key == "addDotsMinNum")
+        {
+            if (num < 0)
+            {
+                num = 0;
+            }
+            if (num > config.addDotsMaxNum - 1)
+            {
+                num = static_cast<int>(config.addDotsMaxNum) - 1;
+            }
+            config.addDotsMinNum = num;
+            continue;
+        }
+
+        if (key == "coordMinNum")
+        {
+            if (num < 0)
+            {
+                num = 0;
+            }
+            if (num > 15)
+            {
+                num = 15;
+            }
+            config.addDotsMinNum = num;
+            continue;
+        }
+
+        if (key == "maxIters")
+        {
+            if (num > 4000)
+            {
+                num = 4000;
+            }
+            if (num < 201)
+            {
+                num = 201;
+            }
+            config.maxIters = num / 10;
+
+            if (config.maxIters <= config.minIters)
+            {
+                config.minIters = config.maxIters - 1;
+            }
+
+            continue;
+        }
+
+        if (key == "minIters")
+        {
+            if (num < 200)
+            {
+                num = 200;
+            }
+            if (num > config.maxIters)
+            {
+                num = static_cast<int>(config.maxIters) * 10 - 1;
+            }
+
+            config.minIters = num / 10;
+
+            if (config.minIters >= config.maxIters)
+            {
+                config.maxIters = config.minIters + 1;
+            }
+
+            continue;
+        }
+
+        if (key == "addDotProbability")
+        {
+            if (num < 1)
+            {
+                num = 1;
+            }
+            if (num > 3)
+            {
+                num = 3;
+            }
+            config.addDotProbability = 6 - num;
+            continue;
+        }
+
+        if (key == "coordProbability")
+        {
+            if (num < 1)
+            {
+                num = 1;
+            }
+            if (num > 3)
+            {
+                num = 3;
+            }
+            config.coordProbability = 6 - num;
+            continue;
+        }
+
+        if (key == "stapsToCheck")
+        {
+            if (num < 50)
+            {
+                num = 50;
+            }
+            if (num > 2000)
+            {
+                num = 2000;
+            }
+            config.stapsToCheck = num / 10;
+            continue;
+        }
+    }
+
+    configFile.close();
 }

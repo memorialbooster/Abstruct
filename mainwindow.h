@@ -5,6 +5,9 @@
 #include <QtOpenGL>
 #include <QTimer>
 
+#define DEFAULT_SCREEN_WIDHT 680
+#define DEFAULT_SCREEN_HEIGHT 600
+
 struct Dot
 {
     GLfloat x;
@@ -26,15 +29,34 @@ struct Coord
     std::string coordString;
 };
 
+struct Config
+{
+    int widht;
+    int height;
+    size_t dotsNum;
+    size_t addDotsMaxNum;
+    size_t addDotsMinNum;
+    size_t coordMinNum;
+    int maxIters;
+    int minIters;
+    int addDotProbability;
+    int coordProbability;
+    int stapsToCheck;
+};
+
 class AbstructObject
 {
 private:
+    Config config;
+
     std::vector<Dot> dots;
     std::vector<Line> lines;
     std::vector<size_t> addDotIndexes;
     std::vector<Coord> coordinates;
 
     int backCounter;
+
+    void loadConfig();
 
     void createRandomDot();
     void createCoord();

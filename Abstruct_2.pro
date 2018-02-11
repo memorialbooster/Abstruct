@@ -29,3 +29,6 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h
 
 LIBS += opengl32.lib
+
+DISTFILES += \
+    settings.cfg
