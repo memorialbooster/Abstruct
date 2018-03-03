@@ -1,9 +1,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#ifndef SCREEN_SAVER
 #include <QGLWidget>
 #include <QtOpenGL>
 #include <QTimer>
+#else
+#include <windows.h>
+#include <gl/gl.h>
+#include <string>
+#include <vector>
+#endif /* SCREEN_SAVER */
 
 #define DEFAULT_SCREEN_WIDHT 680
 #define DEFAULT_SCREEN_HEIGHT 600
@@ -82,10 +89,14 @@ public:
 };
 
 
-class MainWindow : public QGLWidget
+class MainWindow
+#ifndef SCREEN_SAVER
+    : public QGLWidget
 {
     Q_OBJECT
-
+#else
+{
+#endif /* SCREEN_SAVER */
 private:
     int screenWidht;
     int screenHeight;
@@ -101,10 +112,14 @@ protected:
     void paintGL();
 
 public:
-    MainWindow(QWidget *parent = 0);
     ~MainWindow();
+#ifndef SCREEN_SAVER
+    MainWindow(QWidget *parent = 0);
 
 protected slots:
+#else
+    MainWindow();
+#endif /* SCREEN_SAVER */
     void timerDrawScene();
 };
 

@@ -6,6 +6,14 @@
 #pragma comment(lib, "scrnsave.lib")
 #pragma comment(lib, "ComCtl32.lib")
 
+#include <gl/gl.h>
+//#include <gl/glu.h>
+
+#pragma comment(lib, "opengl32.lib")
+//#pragma comment(lib, "glu32.lib")
+
+#include "../mainwindow.h"
+
 LONG WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
     switch (message)

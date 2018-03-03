@@ -24,6 +24,7 @@
 #define BORDER_Y 20
 #define OBJECT_Y GLfloat(1)
 
+#ifndef SCREEN_SAVER
 MainWindow::MainWindow(QWidget *parent)
     : QGLWidget(parent)
 {
@@ -41,6 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     srand(time(NULL));
 }
+#else
+MainWindow::MainWindow()
+{
+}
+#endif /* SCREEN_SAVER */
 
 MainWindow::~MainWindow()
 {
@@ -49,8 +55,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::initializeGL()
 {
+#ifndef SCREEN_SAVER
     setAutoBufferSwap(false);
     qglClearColor(Qt::white);
+#else
+    glClearColor(GLfloat(1.0), GLfloat(1.0), GLfloat(1.0), GLfloat(1.0));
+#endif /* SCREEN_SAVER */
 }
 
 void MainWindow::resizeGL(int width, int height)
@@ -75,7 +85,11 @@ void MainWindow::paintGL()
     drawBackground();
     drawAbstructObject();
 
+#ifndef SCREEN_SAVER
     swapBuffers();
+#else
+    glFinish();
+#endif /* SCREEN_SAVER */
 }
 
 void MainWindow::drawBackground()
@@ -133,16 +147,21 @@ void MainWindow::drawAbstructObject()
         glVertex3f(dot.x + COORD_DIAG_LENGHT, dot.y + COORD_DIAG_LENGHT, OBJECT_Y);
         glEnd();
 
+#ifndef SCREEN_SAVER
         renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, OBJECT_Y,
                    QString::fromUtf8(coords[i].coordString.c_str()), QFont());
+#endif /* SCREEN_SAVER */
     }
 }
 
 void MainWindow::timerDrawScene()
 {
     abstructObject->modifyObject();
-
+#ifndef SCREEN_SAVER
     updateGL();
+#else
+    paintGL();
+#endif /* SCREEN_SAVER */
 }
 
 AbstructObject::AbstructObject()
