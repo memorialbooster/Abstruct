@@ -106,7 +106,11 @@ private:
     void drawBackground();
     void drawAbstructObject();
 
+#ifndef SCREEN_SAVER
 protected:
+#else
+public:
+#endif /* SCREEN_SAVER */
     void initializeGL();
     void resizeGL(int width, int height);
     void paintGL();

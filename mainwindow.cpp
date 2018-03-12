@@ -45,6 +45,12 @@ MainWindow::MainWindow(QWidget *parent)
 #else
 MainWindow::MainWindow()
 {
+    screenHeight = DEFAULT_SCREEN_HEIGHT;
+    screenWidht = DEFAULT_SCREEN_WIDHT;
+
+    srand(time(NULL));
+
+    abstructObject = new AbstructObject;
 }
 #endif /* SCREEN_SAVER */
 
@@ -88,7 +94,7 @@ void MainWindow::paintGL()
 #ifndef SCREEN_SAVER
     swapBuffers();
 #else
-    glFinish();
+   // glFinish();
 #endif /* SCREEN_SAVER */
 }
 
