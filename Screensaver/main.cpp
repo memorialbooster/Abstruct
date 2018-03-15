@@ -82,7 +82,22 @@ LONG WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lpara
         //I don't think you can make a ScreenSaver that can be resized :P
         unsigned int nWidth = GetSystemMetrics(SM_CXSCREEN);
         unsigned int nHeight = GetSystemMetrics(SM_CYSCREEN);
-        glViewport(0, 0, nWidth, nHeight);
+        unsigned int monNum = GetSystemMetrics(SM_CMONITORS);
+        unsigned int xVitual = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        unsigned int yVitual = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+        {
+            myfile << "#######################\n"; // debug!!!
+            myfile << "# monNum      = " << monNum << "\n"; // debug!!!
+            myfile << "# xVitual     = " << xVitual << "\n"; // debug!!!
+            myfile << "# yVitual     = " << yVitual << "\n"; // debug!!!
+            myfile << "# nWidth      = " << nWidth << "\n"; // debug!!!
+            myfile << "# nHeight     = " << nHeight << "\n"; // debug!!!
+            myfile << "#######################\n"; // debug!!!
+        }
+
+        //glViewport(0, 0, nWidth, nHeight);
+        glViewport(0, 0, xVitual, yVitual);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, nWidth, 0, nHeight, -1, 2);
@@ -91,7 +106,7 @@ LONG WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lpara
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        mainWindow = new MainWindow;
+        mainWindow = new MainWindow();
 
         //uTimer = (UINT)SetTimer(hWnd, 2, 10, (TIMERPROC)TimerRedraw);
         uTimer = (UINT)SetTimer(hWnd, 1, 10, NULL);

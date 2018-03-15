@@ -10,6 +10,9 @@
 #include <gl/gl.h>
 #include <string>
 #include <vector>
+
+#define FIRST_MONITOR 1
+#define SECOND_MONITOR 2
 #endif /* SCREEN_SAVER */
 
 #define DEFAULT_SCREEN_WIDHT 680
@@ -57,6 +60,19 @@ class AbstructObject
 private:
     Config config;
 
+#ifdef SCREEN_SAVER
+    unsigned int screenWidth;
+    unsigned int screenHeight;
+    unsigned int offsetWidth;
+    unsigned int offsetHeight;
+    unsigned int areaX1;
+    unsigned int areaX2;
+    unsigned int areaY1;
+    unsigned int areaY2;
+    unsigned int areaWidth;
+    unsigned int areaHeight;
+#endif /* SCREEN_SAVER */
+
     std::vector<Dot> dots;
     std::vector<Line> lines;
     std::vector<size_t> addDotIndexes;
@@ -74,7 +90,13 @@ private:
     void randomiseCoord();
 
 public:
+#ifndef SCREEN_SAVER
     AbstructObject();
+#else
+    AbstructObject(int monNum);
+
+    void getBackgroundArea(std::vector<unsigned int> *x, std::vector<unsigned int> *y);
+#endif /* SCREEN_SAVER */
 
     std::vector<Dot> &getDots();
     Dot &getDot(size_t index);
@@ -96,6 +118,9 @@ class MainWindow
     Q_OBJECT
 #else
 {
+private:
+    int screenNum;
+    AbstructObject *abstructObject2;
 #endif /* SCREEN_SAVER */
 private:
     int screenWidht;
@@ -103,8 +128,13 @@ private:
 
     AbstructObject *abstructObject;
 
+#ifndef SCREEN_SAVER
     void drawBackground();
     void drawAbstructObject();
+#else
+    void drawBackground(AbstructObject *object);
+    void drawAbstructObject();
+#endif /* SCREEN_SAVER */
 
 #ifndef SCREEN_SAVER
 protected:
