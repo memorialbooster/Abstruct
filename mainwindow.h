@@ -93,7 +93,7 @@ public:
 #ifndef SCREEN_SAVER
     AbstructObject();
 #else
-    AbstructObject(int monNum);
+    AbstructObject(int monNum, MONITORINFO info);
 
     void getBackgroundArea(std::vector<unsigned int> *x, std::vector<unsigned int> *y);
 #endif /* SCREEN_SAVER */
@@ -133,7 +133,7 @@ private:
     void drawAbstructObject();
 #else
     void drawBackground(AbstructObject *object);
-    void drawAbstructObject();
+    void drawAbstructObject(AbstructObject *object);
 #endif /* SCREEN_SAVER */
 
 #ifndef SCREEN_SAVER
@@ -152,7 +152,7 @@ public:
 
 protected slots:
 #else
-    MainWindow();
+    MainWindow(std::vector<MONITORINFO> *monitorInfo);
 #endif /* SCREEN_SAVER */
     void timerDrawScene();
 };

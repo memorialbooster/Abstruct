@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     srand(time(NULL));
 }
 #else
-MainWindow::MainWindow()
+MainWindow::MainWindow(std::vector<MONITORINFO> *monitorInfo)
 {
     screenNum = GetSystemMetrics(SM_CMONITORS);
 
@@ -52,7 +52,16 @@ MainWindow::MainWindow()
 
     srand(time(NULL));
 
-    abstructObject = new AbstructObject(FIRST_MONITOR);
+    abstructObject = new AbstructObject(FIRST_MONITOR, monitorInfo->at(0));
+
+    if (screenNum == 2)
+    {
+        abstructObject2 = new AbstructObject(SECOND_MONITOR, monitorInfo->at(1));
+    }
+    else
+    {
+        abstructObject2 = nullptr;
+    }
 }
 #endif /* SCREEN_SAVER */
 
@@ -91,7 +100,12 @@ void MainWindow::paintGL()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     drawBackground(abstructObject);
-    drawAbstructObject();
+    drawAbstructObject(abstructObject);
+    if (screenNum == 2 && abstructObject2 != nullptr)
+    {
+        drawBackground(abstructObject2);
+        drawAbstructObject(abstructObject2);
+    }
 
 #ifndef SCREEN_SAVER
     swapBuffers();
@@ -133,14 +147,20 @@ void MainWindow::drawBackground(AbstructObject *object)
 }
 #endif /* SCREEN_SAVER */
 
+#ifndef SCREEN_SAVER
 void MainWindow::drawAbstructObject()
 {
-    std::vector<Line> &objectLines = abstructObject->getLines();
+    AbstructObject *object = abstructObject
+#else
+void MainWindow::drawAbstructObject(AbstructObject *object)
+{
+#endif /* SCREEN_SAVER */
+    std::vector<Line> &objectLines = object->getLines();
 
     glLineWidth(GLfloat(1));
     glColor3f(GLfloat(0.2), GLfloat(0.2), GLfloat(0.2));
 
-    if(abstructObject->getSmoothSetting())
+    if(object->getSmoothSetting())
     {
         glEnable(GL_LINE_SMOOTH);
         glEnable(GL_BLEND);
@@ -150,8 +170,8 @@ void MainWindow::drawAbstructObject()
 
     for (size_t i = 0; i < objectLines.size(); i++)
     {
-        Dot &dot1 = abstructObject->getDot(objectLines[i].dotIndex1);
-        Dot &dot2 = abstructObject->getDot(objectLines[i].dotIndex2);
+        Dot &dot1 = object->getDot(objectLines[i].dotIndex1);
+        Dot &dot2 = object->getDot(objectLines[i].dotIndex2);
 
         glBegin(GL_LINES);
         glVertex3f(dot1.x, dot1.y, OBJECT_Y);
@@ -159,11 +179,11 @@ void MainWindow::drawAbstructObject()
         glEnd();
     }
 
-    std::vector<Coord> coords = abstructObject->getCoordinates();
+    std::vector<Coord> coords = object->getCoordinates();
 
     for (size_t i = 0; i < coords.size(); i++)
     {
-        Dot &dot = abstructObject->getDot(coords[i].dotIndex);
+        Dot &dot = object->getDot(coords[i].dotIndex);
 
         glBegin(GL_LINES);
         glVertex3f(dot.x, dot.y, OBJECT_Y);
@@ -178,6 +198,8 @@ void MainWindow::drawAbstructObject()
 #ifndef SCREEN_SAVER
         renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, OBJECT_Y,
                    QString::fromUtf8(coords[i].coordString.c_str()), QFont());
+#else
+        // TODO: render text here.
 #endif /* SCREEN_SAVER */
     }
 }
@@ -188,6 +210,10 @@ void MainWindow::timerDrawScene()
 #ifndef SCREEN_SAVER
     updateGL();
 #else
+    if (screenNum == 2 && abstructObject2 != nullptr)
+    {
+        abstructObject2->modifyObject();
+    }
     paintGL();
 #endif /* SCREEN_SAVER */
 }
@@ -196,7 +222,7 @@ void MainWindow::timerDrawScene()
 AbstructObject::AbstructObject()
 {
 #else
-AbstructObject::AbstructObject(int monNum)
+AbstructObject::AbstructObject(int monNum, MONITORINFO info)
 {
     switch (monNum)
     {
@@ -209,12 +235,13 @@ AbstructObject::AbstructObject(int monNum)
     case SECOND_MONITOR:
         offsetWidth = GetSystemMetrics(SM_CXSCREEN);
         screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN) - offsetWidth;
-        // TODO: handle second screen heigth here.
+        screenHeight = info.rcMonitor.bottom;
+        offsetHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN) - screenHeight;
         break;
     }
 
     bool normalScreenOrientation = true;
-    if (screenWidth < screenHeight / 4 * 5)\
+    if (screenWidth < screenHeight / 4 * 5)
     {
         normalScreenOrientation = false;
     }
@@ -230,7 +257,12 @@ AbstructObject::AbstructObject(int monNum)
     }
     else
     {
-        // TODO: handle vertical screen here.
+        areaX1 = offsetWidth + offsetWidth / 8 + 1;
+        areaX2 = offsetWidth + offsetWidth / 8 * 7;
+        areaWidth = areaX2 - areaX1;
+        areaHeight = areaHeight / 5 * 4;
+        areaY1 = offsetHeight + (screenHeight - areaHeight) / 2;
+        areaY2 = areaY1 + areaHeight;
     }
 #endif /* SCREEN_SAVER */
     backCounter = 0;

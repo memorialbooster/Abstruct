@@ -17,10 +17,27 @@
 #include "../mainwindow.h"
 
 MainWindow *mainWindow = nullptr;
+std::vector<MONITORINFO> monInf;
 
 #include <iostream> // debug!!!
 #include <fstream> // debug!!!
 std::ofstream myfile; // debug!!!
+
+BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor,
+    HDC      hdcMonitor,
+    LPRECT   lprcMonitor,
+    LPARAM   dwData)
+{
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+
+    if (GetMonitorInfo(hMonitor, &info))
+    {
+        monInf.push_back(info);
+    }
+
+    return true;
+}
 
 VOID CALLBACK TimerRedraw(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
@@ -96,6 +113,13 @@ LONG WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lpara
             myfile << "#######################\n"; // debug!!!
         }
 
+        if (monNum == 2)
+        {
+            monInf.reserve(2);
+        }
+
+        EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
+
         //glViewport(0, 0, nWidth, nHeight);
         glViewport(0, 0, xVitual, yVitual);
         glMatrixMode(GL_PROJECTION);
@@ -106,10 +130,10 @@ LONG WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wparam, LPARAM lpara
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        mainWindow = new MainWindow();
+        mainWindow = new MainWindow(&monInf);
 
         //uTimer = (UINT)SetTimer(hWnd, 2, 10, (TIMERPROC)TimerRedraw);
-        uTimer = (UINT)SetTimer(hWnd, 1, 10, NULL);
+        uTimer = (UINT)SetTimer(hWnd, 1, USER_TIMER_MINIMUM, NULL);
     }
     break;
     case WM_ERASEBKGND:			// Erases the screen saver background
