@@ -43,6 +43,11 @@ MainWindow::MainWindow(QWidget *parent)
     srand(time(NULL));
 }
 #else
+
+#include <glut.h>
+
+#pragma comment(lib, "glut32.lib")
+
 MainWindow::MainWindow(std::vector<MONITORINFO> *monitorInfo)
 {
     screenNum = GetSystemMetrics(SM_CMONITORS);
@@ -101,16 +106,15 @@ void MainWindow::paintGL()
 
     drawBackground(abstructObject);
     drawAbstructObject(abstructObject);
+
+#ifndef SCREEN_SAVER
+    swapBuffers();
+#else
     if (screenNum == 2 && abstructObject2 != nullptr)
     {
         drawBackground(abstructObject2);
         drawAbstructObject(abstructObject2);
     }
-
-#ifndef SCREEN_SAVER
-    swapBuffers();
-#else
-   // glFinish();
 #endif /* SCREEN_SAVER */
 }
 
@@ -198,8 +202,12 @@ void MainWindow::drawAbstructObject(AbstructObject *object)
 #ifndef SCREEN_SAVER
         renderText(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, OBJECT_Y,
                    QString::fromUtf8(coords[i].coordString.c_str()), QFont());
-#else
-        // TODO: render text here.
+#else        
+        glRasterPos3f(dot.x + COORD_DIAG_LENGHT, dot.y + CTEST_Y_SCALE, OBJECT_Y);
+        for (size_t j = 0; j < coords[i].coordString.size(); j++)
+        {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, coords[i].coordString.c_str()[j]);
+        }
 #endif /* SCREEN_SAVER */
     }
 }
