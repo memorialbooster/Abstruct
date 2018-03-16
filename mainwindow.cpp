@@ -265,10 +265,10 @@ AbstructObject::AbstructObject(int monNum, MONITORINFO info)
     }
     else
     {
-        areaX1 = offsetWidth + offsetWidth / 8 + 1;
-        areaX2 = offsetWidth + offsetWidth / 8 * 7;
+        areaX1 = offsetWidth + screenWidth / 8 + 1;
+        areaX2 = offsetWidth + screenWidth / 8 * 7;
         areaWidth = areaX2 - areaX1;
-        areaHeight = areaHeight / 5 * 4;
+        areaHeight = areaWidth / 5 * 4;
         areaY1 = offsetHeight + (screenHeight - areaHeight) / 2;
         areaY2 = areaY1 + areaHeight;
     }
